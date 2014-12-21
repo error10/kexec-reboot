@@ -55,7 +55,7 @@ def device_map_to_mount_point(device, device_map)
       return nil
     end
   end
-  device_to_mount_point("#{mount_point[1]}#{mount_point_part}")
+  device_to_mount_point(device_path)
 end
 
 # Find a mount point given the device UUID
