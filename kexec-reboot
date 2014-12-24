@@ -23,14 +23,8 @@ def device_to_mount_point(device)
     STDERR.puts("Device #{device} isn't a block device\n")
     return nil
   end
-  mount_point = nil
-  mounts = open("/proc/mounts").each_line do |mount|
-    line = mount.split
-    if line[0] == device then
-      mount_point = line[1]
-      break
-    end
-  end
+  proc_mounts = Hash[IO.readlines('/proc/mounts').collect { |line| line.split[0..1] }]
+  mount_point = proc_mounts[device]
   mount_point = "" if mount_point == "/"  # Eliminate double /
   if mount_point.nil? then
     STDERR.puts "Can't find the mount point for device #{device}\n"
@@ -71,7 +65,7 @@ end
 
 # Load the available kernels from the given GRUB 1 configuration file
 def load_kernels_grub(config)
-  device_map = open("/boot/grub/device.map").read
+  device_map = IO.readlines("/boot/grub/device.map")
   entries = Array.new
   config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
     mount_point = device_map_to_mount_point(entry[1], device_map)
@@ -133,7 +127,7 @@ def process_grub_config
   # We try GRUB 1 files first
   ["/boot/grub/menu.lst"].each do |file|
     begin
-      entries = load_kernels_grub(open(file).read)
+      entries = load_kernels_grub(IO.readlines(file))
       if !entries.empty? then
         if $verbose then
           puts "Read GRUB configuration from #{file}\n"
@@ -150,7 +144,7 @@ def process_grub_config
   # Then we try GRUB 2 files
   ["/boot/grub2/grub.cfg", "/boot/grub/grub.cfg"].each do |file|
     begin
-      entries = load_kernels_grub2(open(file).read)
+      entries = load_kernels_grub2(IO.readlines(file))
       if !entries.empty? then
         if $verbose then
           puts "Read GRUB configuration from #{file}\n"
