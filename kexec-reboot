@@ -73,7 +73,7 @@ end
 
 # Load the available kernels from the given GRUB 1 configuration file
 def grub1_kernel_entries(config)
-  device_map = IO.readlines("/boot/grub/device.map")
+  device_map = IO.read("/boot/grub/device.map")
   entries = Array.new
   config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
     begin
