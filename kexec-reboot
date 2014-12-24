@@ -63,12 +63,26 @@ def uuid_to_mount_point(uuid)
   device_to_mount_point(device)
 end
 
+# Scan directories to find the one containing the given path
+def locate_kernel(kernel)
+  {"", "/boot"}.each do |dir|
+    return dir if File.exists?("#{dir}#{kernel}")
+  end
+  raise Errno::ENOENT
+end
+
 # Load the available kernels from the given GRUB 1 configuration file
 def load_kernels_grub(config)
   device_map = IO.readlines("/boot/grub/device.map")
   entries = Array.new
   config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
-    mount_point = device_map_to_mount_point(entry[1], device_map)
+    begin
+      # Try hard-coded locations, works 99.9% of the time
+      mount_point = locate_kernel(entry[1])
+    rescue Errno::ENOENT
+      # Fallback to reading grub1 device.map, which is often wrong
+      mount_point = device_map_to_mount_point(entry[1], device_map)
+    end
     name = entry[0].strip
     kernel = "#{mount_point}#{entry[2]}"
     initrd = "#{mount_point}#{entry[4]}"
