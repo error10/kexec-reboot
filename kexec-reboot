@@ -65,7 +65,7 @@ end
 
 # Scan directories to find the one containing the given path
 def locate_kernel(kernel)
-  {"", "/boot"}.each do |dir|
+  ["", "/boot"].each do |dir|
     return dir if File.exists?("#{dir}#{kernel}")
   end
   raise Errno::ENOENT
