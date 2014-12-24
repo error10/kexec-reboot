@@ -143,7 +143,7 @@ def process_grub_config
   ]
   possible_grub_configs.each do |filename, handler|
     begin
-      entries = method(handler).call(IO::readlines(filename))
+      entries = method(handler).call(IO::read(filename))
       if !entries.empty? then
         if $verbose then
           puts "Read GRUB configuration from #{file}\n"
