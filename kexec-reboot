@@ -66,6 +66,7 @@ end
 # Scan directories to find the one containing the given path
 def locate_kernel(kernel)
   ["", "/boot"].each do |dir|
+    STDERR.puts "Looking for #{dir}#{kernel}\n" if $verbose
     return dir if File.exists?("#{dir}#{kernel}")
   end
   raise Errno::ENOENT
@@ -78,7 +79,7 @@ def grub1_kernel_entries(config)
   config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
     begin
       # Try hard-coded locations, works 99.9% of the time
-      mount_point = locate_kernel(entry[1])
+      mount_point = locate_kernel(entry[2])
     rescue Errno::ENOENT
       # Fallback to reading grub1 device.map, which is often wrong
       mount_point = device_map_to_mount_point(entry[1], device_map)
@@ -146,7 +147,7 @@ def process_grub_config
       entries = method(handler).call(IO::read(filename))
       if !entries.empty? then
         if $verbose then
-          puts "Read GRUB configuration from #{file}\n"
+          puts "Read GRUB configuration from #{filename}\n"
         end
         return entries
       end
