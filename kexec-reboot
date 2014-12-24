@@ -72,7 +72,7 @@ def locate_kernel(kernel)
 end
 
 # Load the available kernels from the given GRUB 1 configuration file
-def load_kernels_grub(config)
+def grub1_kernel_entries(config)
   device_map = IO.readlines("/boot/grub/device.map")
   entries = Array.new
   config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
@@ -107,7 +107,7 @@ def load_kernels_grub(config)
 end
 
 # Load the available kernels from the given GRUB 2 configuration file
-def load_kernels_grub2(config)
+def grub2_kernel_entries(config)
   entries = Array.new
   config.scan(/menuentry '([^']+)'.+?\{.+?search.+?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).+?linux(16)?\s+([^ ]+) (.+?)$.+?initrd(16)?\s+(.+?)$.+?\}/m).each do |entry|
     mount_point = uuid_to_mount_point(entry[1])
@@ -136,29 +136,14 @@ end
 
 # Load a grub configuration file and process it
 def process_grub_config
-  # TODO: Duplicate code smells, refactor this
-  # First, locate the grub configuration file
-  # We try GRUB 1 files first
-  ["/boot/grub/menu.lst"].each do |file|
+  possible_grub_configs = [
+    ["/boot/grub/menu.lst",  :grub1_kernel_entries],
+    ["/boot/grub2/grub.cfg", :grub2_kernel_entries],
+    ["/boot/grub/grub.cfg",  :grub2_kernel_entries],
+  ]
+  possible_grub_configs.each do |filename, handler|
     begin
-      entries = load_kernels_grub(IO.readlines(file))
-      if !entries.empty? then
-        if $verbose then
-          puts "Read GRUB configuration from #{file}\n"
-        end
-        return entries
-      end
-    rescue Errno::EACCES
-      STDERR.puts("#{$!}\nYou must be root to run this utility.\n")
-      exit 1
-    rescue Errno::ENOENT
-      next
-    end
-  end
-  # Then we try GRUB 2 files
-  ["/boot/grub2/grub.cfg", "/boot/grub/grub.cfg"].each do |file|
-    begin
-      entries = load_kernels_grub2(IO.readlines(file))
+      entries = method(handler).call(IO::readlines(filename))
       if !entries.empty? then
         if $verbose then
           puts "Read GRUB configuration from #{file}\n"
