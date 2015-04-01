@@ -24,6 +24,19 @@ def device_to_mount_point(device)
     return nil
   end
   proc_mounts = Hash[IO.readlines('/proc/mounts').collect { |line| line.split[0..1] }]
+  proc_mounts.delete("rootfs")          # Ignore this if present
+  proc_mounts.keys.each do |key|        # Try to resolve symlinks because Ubuntu is inconsistent
+    begin
+      real_path = File.realpath(key)
+    rescue
+      real_path = key
+    end
+    if (real_path != key)
+      proc_mounts[real_path] = proc_mounts[key]
+      proc_mounts.delete(key)
+    end
+  end
+
   mount_point = proc_mounts[device]
   mount_point = "" if mount_point == "/"  # Eliminate double /
   if mount_point.nil? then
@@ -146,9 +159,7 @@ def process_grub_config
     begin
       entries = method(handler).call(IO::read(filename))
       if !entries.empty? then
-        if $verbose then
-          puts "Read GRUB configuration from #{filename}\n"
-        end
+        puts "Read GRUB configuration from #{filename}\n" if $verbose
         return entries
       end
     rescue Errno::EACCES
