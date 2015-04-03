@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # kexec-reboot - Easily choose a kernel to kexec
 # Copyright (C) 2014 Michael Hampton <support@ringingliberty.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -123,7 +123,7 @@ end
 # Load the available kernels from the given GRUB 2 configuration file
 def grub2_kernel_entries(config)
   entries = Array.new
-  config.scan(/menuentry '([^']+)'.+?\{.+?search.+?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).+?linux(16)?\s+([^ ]+) (.+?)$.+?initrd(16)?\s+(.+?)$.+?\}/m).each do |entry|
+  config.scan(/menuentry '([^']+)'.+?\{.+?search.+?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).+?linux(efi|16)?\s+([^ ]+) (.+?)$.+?initrd(efi|16)?\s+(.+?)$.+?\}/m).each do |entry|
     mount_point = uuid_to_mount_point(entry[1])
     name = entry[0].strip
     kernel = "#{mount_point}#{entry[3]}"
@@ -151,9 +151,11 @@ end
 # Load a grub configuration file and process it
 def process_grub_config
   possible_grub_configs = [
-    ["/boot/grub/menu.lst",  :grub1_kernel_entries],
+    ["/etc/grub2-efi.cfg",   :grub2_kernel_entries],
+    ["/etc/grub2.cfg",       :grub2_kernel_entries],
     ["/boot/grub2/grub.cfg", :grub2_kernel_entries],
     ["/boot/grub/grub.cfg",  :grub2_kernel_entries],
+    ["/boot/grub/menu.lst",  :grub1_kernel_entries],
   ]
   possible_grub_configs.each do |filename, handler|
     begin
