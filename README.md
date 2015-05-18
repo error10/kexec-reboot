@@ -25,7 +25,7 @@ kexec-reboot requires the following packages to be installed:
 
 In addition, the system must use grub to boot, as kexec-reboot reads the grub
 configuration to determine what kernels are available. Both grub 1 and 2
-are supported.
+are supported, as well as BIOS and UEFI boot.
 
 ## Usage
 
