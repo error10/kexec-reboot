@@ -155,6 +155,7 @@ def process_grub_config
     ["/etc/grub2.cfg",       :grub2_kernel_entries],
     ["/boot/grub2/grub.cfg", :grub2_kernel_entries],
     ["/boot/grub/grub.cfg",  :grub2_kernel_entries],
+    ["/etc/grub.conf",       :grub1_kernel_entries],
     ["/boot/grub/menu.lst",  :grub1_kernel_entries],
   ]
   possible_grub_configs.each do |filename, handler|
