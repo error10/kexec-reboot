@@ -106,10 +106,10 @@ def grub1_kernel_entries(config)
       STDERR.puts "Kernel #{kernel} is not readable\n"
       next
     end
-    if !File.readable?(initrd) then
-      STDERR.puts "Initrd #{initrd} is not readable\n"
-      next
-    end
+#    if !File.readable?(initrd) then
+#      STDERR.puts "Initrd #{initrd} is not readable\n"
+#      next
+#    end
     entries.push({
       :name    => name,
       :kernel  => kernel,
@@ -180,8 +180,8 @@ def kexec(entry)
   print "Staging kernel #{entry[:name]}\n" if $verbose
   print "Unloading previous kexec target, if any\n" if $verbose
   `/sbin/kexec -u`
-  print "Running /sbin/kexec -l #{entry[:kernel]} --append='#{entry[:cmdline]}' --initrd=#{entry[:initrd]}\n" if $verbose
-  system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "--initrd=#{entry[:initrd]}"
+  print "Running /sbin/kexec -l #{entry[:kernel]} --append='#{entry[:cmdline]}' #{if entry[:initrd] != '' then '--initrd=' end}#{entry[:initrd]}\n" if $verbose
+  system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "#{if entry[:initrd] != '' then '--initrd=' end}#{entry[:initrd]}"
 end
 
 def interactive_select_kernel
