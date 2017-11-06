@@ -217,19 +217,19 @@ end
 
 options = {}
 
-opts = OptionParser.new do |opts|
-  opts.banner = "Usage: kexec-reboot [options]"
+opts = OptionParser.new do |o|
+  o.banner = "Usage: kexec-reboot [options]"
 
-  opts.on("-i", "--interactive", "Choose the kernel to stage from a list") do |i|
+  o.on("-i", "--interactive", "Choose the kernel to stage from a list") do |i|
     options[:interactive] = i
   end
-  opts.on("-l", "--latest", "Stage the latest kernel") do |l|
+  o.on("-l", "--latest", "Stage the latest kernel") do |l|
     options[:latest] = l
   end
-  opts.on("-r", "--reboot", "Reboot immediately after staging the kernel") do |r|
+  o.on("-r", "--reboot", "Reboot immediately after staging the kernel") do |r|
     options[:reboot] = r
   end
-  opts.on("-v", "--[no-]verbose", "Extra verbosity.") do |v|
+  o.on("-v", "--[no-]verbose", "Extra verbosity.") do |v|
     $verbose = v
   end
 end
