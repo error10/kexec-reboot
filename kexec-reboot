@@ -89,7 +89,7 @@ end
 def grub1_kernel_entries(config)
   device_map = IO.read("/boot/grub/device.map")
   entries = Array.new
-  config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/m).each do |entry|
+  config.scan(/title (.+?$).+?root \(([^\)]+)\).+?kernel ([^ ]+) (.+?)$.+?initrd (.+?$)/ms).each do |entry|
     begin
       # Try hard-coded locations, works 99.9% of the time
       mount_point = locate_kernel(entry[2])
