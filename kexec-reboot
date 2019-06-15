@@ -17,6 +17,8 @@
 
 require 'optparse'
 
+$noop = false
+
 # Find a mount point given the device special
 def device_to_mount_point(device)
   if File.ftype(device) != "blockSpecial" then
@@ -179,9 +181,17 @@ end
 def kexec(entry)
   print "Staging kernel #{entry[:name]}\n" if $verbose
   print "Unloading previous kexec target, if any\n" if $verbose
-  `/sbin/kexec -u`
+  if ($noop) then
+    print "NOOP: not running: /sbin/kexc -u\n"
+  else
+    system "/sbin/kexec", "-u"
+  end
   print "Running /sbin/kexec -l #{entry[:kernel]} --append='#{entry[:cmdline]}' --initrd=#{entry[:initrd]}\n" if $verbose
-  system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "--initrd=#{entry[:initrd]}"
+  if ($noop) then
+    print "NOOP: not running: /sbin/kexc -l #{entry[:kernel]} --append='#{entry[:cmdline]}' --initrd=#{entry[:initrd]}\n"
+  else
+    system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "--initrd=#{entry[:initrd]}"
+  end
 end
 
 def interactive_select_kernel
@@ -232,6 +242,9 @@ opts = OptionParser.new do |o|
   o.on("-v", "--[no-]verbose", "Extra verbosity.") do |v|
     $verbose = v
   end
+  o.on("-n", "--noop", "Noop.") do |n|
+    $noop = true
+  end
 end
 
 opts.parse!
@@ -254,6 +267,10 @@ if !entry.nil? then
   entry = kexec(entry)
 
   if options[:reboot] then
-    `shutdown -r now`
+    if ($noop) then
+      print "NOOP: not running: /sbin/reboot\n"
+    else
+      system "/sbin/reboot"
+    end
   end
 end
