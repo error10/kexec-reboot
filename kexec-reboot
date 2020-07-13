@@ -179,9 +179,12 @@ end
 def kexec(entry)
   print "Staging kernel #{entry[:name]}\n" if $verbose
   print "Unloading previous kexec target, if any\n" if $verbose
-  `/sbin/kexec -u`
-  print "Running /sbin/kexec -l #{entry[:kernel]} --append='#{entry[:cmdline]}' --initrd=#{entry[:initrd]}\n" if $verbose
-  system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "--initrd=#{entry[:initrd]}"
+  if system("/sbin/kexec", "-u") then
+    print "Running /sbin/kexec -l #{entry[:kernel]} --append='#{entry[:cmdline]}' --initrd=#{entry[:initrd]}\n" if $verbose
+    system "/sbin/kexec", "-l", entry[:kernel], "--append=#{entry[:cmdline]}", "--initrd=#{entry[:initrd]}"
+  else
+    return false
+  end
 end
 
 def interactive_select_kernel
