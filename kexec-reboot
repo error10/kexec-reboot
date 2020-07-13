@@ -254,9 +254,9 @@ end
 
 if !entry.nil? then
   print "Staging #{entry[:name]}\n"
-  entry = kexec(entry)
+  success = kexec(entry)
 
-  if options[:reboot] then
+  if options[:reboot] && success then
     `shutdown -r now`
   end
 end
