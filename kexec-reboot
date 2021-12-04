@@ -127,7 +127,7 @@ def grub2_kernel_entries(config)
     mount_point = uuid_to_mount_point(entry[1])
     name = entry[0].strip
     kernel = "#{mount_point}#{entry[3]}"
-    initrd = "#{mount_point}#{entry[6]}"
+    initrd = "#{mount_point}#{entry[6].gsub(/\/(?:[^\s\/]+\/)*(?:amd|intel)-ucode\.img/,'').strip}"
     cmdline = entry[4].strip
     # Sanity check the kernel and initrd; they must be present
     if !File.readable?(kernel) then
