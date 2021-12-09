@@ -148,6 +148,45 @@ def grub2_kernel_entries(config)
   entries
 end
 
+# Use the `grubby` system command (Fedora-like OS)
+def grubby_last_resort
+  entries = Array.new
+  grubby = `grubby --info=ALL`
+  menu = Hash[
+    grubby.split("index=".drop(1).map do |entry|  # Drop first item (blank)
+      values = entry.split("\n")
+      [
+        values[0].to_i,
+        Hash[
+          values.drop(1).map do |pair|  # Drop first item (blank)
+            k, v = pair.split("=", 2)
+            [k, v.delete_prefix('"').delete_suffix('"')]
+          end
+        ]
+      ]
+    end
+  ]
+  variables = grubby.scan(/\$([a-zA-Z0-9_]+)/ms).map {|matches| matches[0]}
+  variables_val = Hash[]
+  variables.each do |variable|
+    `grep "set #{variable}=" /boot/efi/EFI/*/*`.split("\n").each do |match|
+      variables_val["$#{variable}"] = match.split(":", 2)[1].split("=", 2)[1].delete_prefix('"').delete_suffix('"')
+    end
+  end
+  menu.each do |index, entry|
+    entry.each do |key, value|
+      variables_val.each {|k,v| entry[key].sub!(k, v)}
+    end
+    entries.push({
+      :name    => entry["title"].strip,
+      :kernel  => entry["kernel"].strip,
+      :initrd  => entry["initrd"].strip,
+      :cmdline => "root=#{entry["root"]} #{entry["args"]}.strip}",
+    })
+  end
+  entries
+end
+
 # Load a grub configuration file and process it
 def process_grub_config
   possible_grub_configs = [
@@ -171,6 +210,11 @@ def process_grub_config
     rescue Errno::ENOENT
       next
     end
+  end
+  entries = method(:grubby_last_resort).call()
+  if !entries.empty? then
+    puts "Read configuration from 'grubby'" if $verbose
+    return entries
   end
   STDERR.puts("Couldn't find a grub configuration anywhere!\n")
   exit 1
